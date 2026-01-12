@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snippets - Personal Code Snippet Manager</title>
+  <meta name="description" content="A personal code snippet manager for developers. Store, organize, and retrieve reusable code blocks with syntax highlighting and auto language detection." />
+  <meta name="theme-color" content="#0d1117" />
+  
+  <meta property="og:title" content="Snippets - Code Snippet Manager" />
+  <meta property="og:description" content="Store, organize, and retrieve reusable code blocks with syntax highlighting." />
+  <meta property="og:type" content="website" />
+  
+  <meta name="twitter:card" content="summary_large_image" />
+  
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <!-- Header -->
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <div class="sidebar-logo">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+          </div>
+          <h1>Snippets</h1>
+        </div>
+
+        <!-- Search -->
+        <div class="search-container">
+          <svg class="search-icon icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="search-input" class="search-input" placeholder="Search snippets..." />
+        </div>
+
+        <!-- Language Filter -->
+        <select id="language-filter" class="language-filter">
+          <option value="all">All Languages</option>
+          <option value="javascript">JavaScript</option>
+          <option value="typescript">TypeScript</option>
+          <option value="python">Python</option>
+          <option value="html">HTML</option>
+          <option value="css">CSS</option>
+          <option value="json">JSON</option>
+          <option value="unknown">Plain Text</option>
+        </select>
+      </div>
+
+      <!-- Actions -->
+      <div class="sidebar-actions">
+        <button id="new-btn" class="btn btn-primary btn-new">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          New
+        </button>
+        <button id="export-btn" class="btn btn-outline" title="Export snippets">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </button>
+        <button id="import-btn" class="btn btn-outline" title="Import snippets">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </button>
+        <input type="file" id="import-input" accept=".json" hidden />
+      </div>
+
+      <!-- Snippet List -->
+      <div class="snippet-list" id="snippet-list"></div>
+
+      <!-- Footer Stats -->
+      <div class="sidebar-footer" id="sidebar-footer">
+        0 snippets • Stored locally
+      </div>
+    </aside>
+
+    <!-- Editor Panel -->
+    <main class="editor-panel" id="editor-panel">
+      <!-- Empty State -->
+      <div class="empty-state" id="empty-state">
+        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        <h2>No snippet selected</h2>
+        <p>Select a snippet from the sidebar or create a new one</p>
+      </div>
+
+      <!-- Editor Content -->
+      <div class="editor-content" id="editor-content" style="display: none;">
+        <!-- Editor Header -->
+        <header class="editor-header">
+          <div class="editor-header-left">
+            <input type="text" id="snippet-name" class="snippet-name-input" placeholder="Snippet name" />
+            
+            <div class="language-selector-container">
+              <select id="language-select" class="language-select">
+                <option value="javascript">JavaScript</option>
+                <option value="typescript">TypeScript</option>
+                <option value="python">Python</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="json">JSON</option>
+                <option value="unknown">Plain Text</option>
+              </select>
+
+              <div id="detected-language" class="detected-language" style="display: none;">
+                <svg class="icon sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+                </svg>
+                Detected: <span id="detected-badge"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="editor-header-right">
+            <button id="preview-toggle" class="btn btn-icon" title="Toggle preview">
+              <svg class="icon" id="preview-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg class="icon" id="edit-icon" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+              </svg>
+            </button>
+
+            <button id="copy-btn" class="btn btn-icon" title="Copy code">
+              <svg class="icon" id="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+              </svg>
+              <svg class="icon" id="check-icon" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </button>
+
+            <button id="delete-btn" class="btn btn-icon btn-destructive" title="Delete snippet">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18"></path>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              </svg>
+            </button>
+
+            <button id="save-btn" class="btn btn-primary btn-save" disabled>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              Save
+            </button>
+          </div>
+        </header>
+
+        <!-- Tags Section -->
+        <div class="tags-section">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"></path>
+            <path d="M7 7h.01"></path>
+          </svg>
+          <div class="tags-container" id="tags-container"></div>
+          <input type="text" id="tag-input" class="tag-input" placeholder="Add tag..." />
+        </div>
+
+        <!-- Code Area -->
+        <div class="code-area" id="code-area">
+          <textarea id="code-textarea" class="code-textarea" placeholder="Paste or type your code here..." spellcheck="false"></textarea>
+          <div id="code-preview" class="code-preview" style="display: none;"></div>
+        </div>
+
+        <!-- Editor Footer -->
+        <footer class="editor-footer">
+          <div class="editor-stats">
+            <span id="line-count">0 lines</span>
+            <span id="char-count">0 characters</span>
+          </div>
+          <div class="editor-updated">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            Last updated: <span id="last-updated">-</span>
+          </div>
+        </footer>
+      </div>
+    </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="delete-modal" style="display: none;">
+      <div class="modal">
+        <h3>Delete snippet?</h3>
+        <p>This will permanently delete "<span id="delete-snippet-name"></span>". This action cannot be undone.</p>
+        <div class="modal-actions">
+          <button id="cancel-delete" class="btn btn-outline">Cancel</button>
+          <button id="confirm-delete" class="btn btn-destructive">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    Made for future use by Aarush
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
